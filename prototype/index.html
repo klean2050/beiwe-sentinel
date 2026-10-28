@@ -1,0 +1,1400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sentinel App Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+/* Layout: a working phone on the left, a researcher's control bench on the right; stacks to one column on phones. */
+:root {
+  /* bench (outer page) */
+  --bg: #eef3f3;
+  --panel: #ffffff;
+  --ink: #102626;
+  --muted: #4d6566;
+  --line: #d3dfdf;
+  --accent: #027372;
+  --accent-ink: #ffffff;
+  --code-bg: #f4f8f8;
+  --good: #1f7a3f;
+  --warn: #a5560f;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* phone hardware */
+  --bezel: #1a1d1f;
+  --bezel-edge: #3a3f42;
+
+  /* app palette: Beiwe2 colors, taken from beiwe-ios Util/AppColors.swift */
+  --app-1: #539da6;
+  --app-2: #027372;
+  --app-3: #004040;
+  --app-4: #d96a2a;
+  --app-grad-top: #017681;
+  --app-grad-bottom: #52bfbe;
+
+  /* app surfaces: the real app is light-only, so these stay fixed in both page themes */
+  --app-bg: #ffffff;
+  --app-ink: #111111;
+  --app-sub: #5f6b6d;
+  --app-line: #dfe5e6;
+  --app-field: #f3f6f6;
+  --app-dim: rgba(0, 0, 0, 0.42);
+  --sys-dialog: #f2f2f6;
+  --sys-dialog-android: #eef2f1;
+  --sys-blue: #0a66d8;
+  --on-color: #ffffff;
+  --banner-bg: rgba(246, 246, 248, 0.97);
+  --toast-bg: #2b2f30;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1616;
+    --panel: #142121;
+    --ink: #e3eeee;
+    --muted: #93abab;
+    --line: #26393a;
+    --accent: #52bfbe;
+    --accent-ink: #062020;
+    --code-bg: #0f1b1b;
+    --good: #6fd08f;
+    --warn: #f0a868;
+    --bezel: #050707;
+    --bezel-edge: #2c3436;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1616;
+  --panel: #142121;
+  --ink: #e3eeee;
+  --muted: #93abab;
+  --line: #26393a;
+  --accent: #52bfbe;
+  --accent-ink: #062020;
+  --code-bg: #0f1b1b;
+  --good: #6fd08f;
+  --warn: #f0a868;
+  --bezel: #050707;
+  --bezel-edge: #2c3436;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+header.top { display: flex; flex-direction: column; gap: 6px; max-width: 70ch; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.1;
+  margin: 0;
+  text-wrap: balance;
+}
+.lede { margin: 0; color: var(--muted); }
+
+.stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- phone ---------- */
+.phone-col { display: flex; flex-direction: column; align-items: center; gap: 12px; position: sticky; top: 16px; }
+@media (max-width: 860px) { .phone-col { position: static; } }
+.phone {
+  width: 390px;
+  max-width: 100%;
+  height: 800px;
+  max-height: calc(100dvh - 40px);
+  min-height: 600px;
+  border-radius: 54px;
+  background: var(--bezel);
+  padding: 12px;
+  box-shadow: 0 0 0 2px var(--bezel-edge), 0 30px 60px -20px rgba(0, 0, 0, 0.45);
+  position: relative;
+}
+.phone.android { border-radius: 38px; }
+.screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 43px;
+  background: var(--app-bg);
+  color: var(--app-ink);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.phone.android .screen { border-radius: 28px; font-family: Roboto, "Noto Sans", system-ui, sans-serif; }
+.phone-caption { font-size: 13px; color: var(--muted); text-align: center; max-width: 380px; margin: 0; }
+
+.statusbar {
+  flex: none;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 28px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--app-ink);
+  position: relative;
+  z-index: 3;
+  font-variant-numeric: tabular-nums;
+}
+.phone.android .statusbar { height: 34px; padding: 4px 22px 0; font-size: 13px; font-weight: 500; }
+.statusbar.on-color { color: var(--on-color); }
+.island { position: absolute; left: 50%; top: 10px; width: 108px; height: 30px; margin-left: -54px; background: #000; border-radius: 20px; }
+.phone.android .island { width: 12px; height: 12px; margin-left: -6px; top: 10px; border-radius: 50%; }
+.sb-right { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.batt { width: 24px; height: 12px; border: 1.5px solid currentColor; border-radius: 3.5px; position: relative; padding: 1.5px; }
+.batt::after { content: ""; display: block; width: 72%; height: 100%; background: currentColor; border-radius: 1.5px; }
+.homebar { flex: none; height: 22px; display: flex; align-items: center; justify-content: center; position: relative; z-index: 3; }
+.homebar span { width: 130px; height: 5px; border-radius: 3px; background: var(--app-ink); opacity: 0.8; }
+.homebar.on-color span { background: var(--on-color); }
+
+.app { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.app.tinted { background: var(--app-1); color: var(--on-color); }
+.app.grad { background: linear-gradient(180deg, var(--app-grad-top), var(--app-grad-bottom)); color: var(--on-color); }
+
+/* app bars */
+.navbar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 46px; padding: 0 14px; }
+.navbar .title { font-weight: 600; font-size: 17px; text-align: center; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.navbar .side { width: 72px; display: flex; }
+.navbar .side.right { justify-content: flex-end; }
+.navbtn { background: none; border: 0; padding: 6px; font: inherit; color: inherit; cursor: pointer; border-radius: 8px; }
+.navbtn.text { color: var(--app-2); font-size: 16px; }
+.app.grad .navbtn.text, .app.tinted .navbtn.text { color: var(--on-color); }
+.icon { width: 24px; height: 24px; display: block; }
+.actionbar { flex: none; height: 56px; background: var(--app-2); color: var(--on-color); display: flex; align-items: center; gap: 12px; padding: 0 8px 0 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.18); position: relative; z-index: 2; }
+.actionbar .title { flex: 1; font-size: 19px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.actionbar .navbtn { color: var(--on-color); }
+
+.pad { padding: 20px 22px 28px; display: flex; flex-direction: column; gap: 16px; }
+.rk-title { font-size: 30px; font-weight: 700; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+.rk-sub { font-size: 17px; margin: 0; }
+.app h2 { margin: 0; font-size: 22px; font-weight: 700; text-wrap: balance; }
+.app p { margin: 0; }
+.md { display: flex; flex-direction: column; gap: 8px; }
+.md h3, .md h4 { margin: 4px 0 0; font-size: 19px; }
+.md ul { margin: 0; padding-left: 22px; }
+
+.btn {
+  font: inherit; font-size: 17px; font-weight: 600;
+  border: 0; border-radius: 12px; padding: 14px 18px; cursor: pointer;
+  background: var(--app-2); color: var(--on-color); width: 100%;
+}
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn.light { background: var(--on-color); color: var(--app-2); }
+.btn.ghost { background: transparent; color: var(--app-2); }
+.btn.orange { background: var(--app-4); color: var(--on-color); }
+.phone.android .btn { border-radius: 4px; text-transform: uppercase; font-size: 15px; font-weight: 500; letter-spacing: 0.04em; padding: 12px 16px; }
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; }
+.linkish { background: none; border: 0; padding: 0; font: inherit; color: var(--app-2); text-decoration: underline; cursor: pointer; align-self: flex-start; }
+.app.tinted .linkish { color: var(--on-color); }
+.spacer { flex: 1; }
+.bottom { flex: none; padding: 12px 20px 14px; display: flex; flex-direction: column; gap: 10px; background: inherit; }
+
+/* forms */
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 14px; font-weight: 600; }
+.field input, .field textarea {
+  font: inherit; font-size: 16px; padding: 11px 12px; border-radius: 10px;
+  border: 1px solid var(--app-line); background: var(--app-field); color: var(--app-ink); width: 100%;
+}
+.phone.android .field input, .phone.android .field textarea { border-radius: 4px 4px 0 0; border: 0; border-bottom: 2px solid var(--app-2); background: var(--app-field); }
+.app.tinted .field input { border-color: transparent; }
+.field .hint { font-size: 12px; opacity: 0.8; }
+
+/* survey list */
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.cell {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: var(--app-bg); color: var(--app-ink); border: 0; border-radius: 14px; padding: 14px 14px;
+  font: inherit; text-align: left; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+.cell .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cell .name { font-weight: 600; font-size: 16px; }
+.cell .kind { font-size: 13px; color: var(--app-sub); }
+.badge { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 999px; background: var(--app-field); color: var(--app-2); white-space: nowrap; }
+.badge.new { background: var(--app-4); color: var(--on-color); }
+.badge.incomplete { background: var(--app-3); color: var(--on-color); }
+.empty { background: rgba(255,255,255,0.18); border-radius: 14px; padding: 18px; text-align: center; }
+.permsurvey { background: var(--app-1); color: var(--on-color); }
+.phone.android .cell { border-radius: 4px; }
+
+/* questions */
+.qtext { font-size: 20px; font-weight: 600; line-height: 1.3; }
+.phone.android .qtext { font-size: 18px; font-weight: 500; }
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 1px solid var(--app-line); border-radius: 12px; cursor: pointer; background: var(--app-bg); }
+.opt.sel { border-color: var(--app-2); background: var(--app-field); }
+.opt input { width: 20px; height: 20px; accent-color: var(--app-2); margin: 0; flex: none; }
+.phone.android .opt { border: 0; border-bottom: 1px solid var(--app-line); border-radius: 0; padding: 12px 4px; }
+.slider-wrap { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
+.slider-wrap input[type=range] { width: 100%; accent-color: var(--app-2); height: 28px; }
+.slider-wrap.untouched input[type=range] { opacity: 0.45; }
+.slider-ends { display: flex; justify-content: space-between; font-size: 14px; color: var(--app-sub); font-variant-numeric: tabular-nums; }
+.slider-val { align-self: center; font-size: 34px; font-weight: 700; color: var(--app-2); font-variant-numeric: tabular-nums; min-height: 44px; }
+.slider-hint { align-self: center; font-size: 13px; color: var(--app-sub); }
+.progress { font-size: 13px; color: var(--app-sub); }
+.unanswered { display: flex; flex-direction: column; gap: 6px; }
+.unanswered button { text-align: left; font: inherit; font-size: 14px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--app-line); background: var(--app-field); color: var(--app-ink); cursor: pointer; }
+
+/* audio */
+.rec { display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 12px; }
+.rec-time { font-size: 44px; font-weight: 300; font-variant-numeric: tabular-nums; }
+.meter { display: flex; align-items: center; gap: 3px; height: 48px; }
+.meter i { display: block; width: 4px; border-radius: 2px; background: var(--app-2); height: 6px; transition: height 0.12s; }
+.recbtn { width: 84px; height: 84px; border-radius: 50%; border: 5px solid var(--app-line); background: var(--app-bg); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.recbtn span { width: 58px; height: 58px; border-radius: 50%; background: #d63b30; transition: all 0.2s; }
+.recbtn.on span { width: 30px; height: 30px; border-radius: 6px; }
+
+/* overlays inside phone */
+.dim { position: absolute; inset: 0; background: var(--app-dim); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 20; }
+.dim.sheet { align-items: flex-end; padding: 10px; }
+.dlg { background: var(--sys-dialog); color: var(--app-ink); border-radius: 14px; width: 100%; max-width: 290px; overflow: hidden; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+.dlg .body { padding: 18px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+.dlg .t { font-weight: 600; font-size: 17px; }
+.dlg .m { font-size: 13px; line-height: 1.35; }
+.dlg .acts { display: flex; flex-direction: column; }
+.dlg .acts button { font: inherit; font-size: 17px; border: 0; border-top: 1px solid var(--app-line); background: none; color: var(--sys-blue); padding: 11px; cursor: pointer; }
+.dlg .acts button.strong { font-weight: 600; }
+.dlg .acts button.danger { color: #d63b30; }
+.dlg.sheet { max-width: none; background: transparent; box-shadow: none; display: flex; flex-direction: column; gap: 8px; }
+.dlg.sheet .group { background: var(--sys-dialog); border-radius: 14px; overflow: hidden; }
+.dlg.sheet .group button:first-child { border-top: 0; }
+.dlg.sheet .acts button { padding: 15px; }
+.phone.android .dlg { background: var(--sys-dialog-android); border-radius: 26px; text-align: left; max-width: 300px; }
+.phone.android .dlg .body { padding: 22px 22px 8px; }
+.phone.android .dlg .t { font-size: 20px; font-weight: 400; }
+.phone.android .dlg .m { font-size: 14px; color: var(--app-sub); }
+.phone.android .dlg .acts { padding: 8px 14px 14px; gap: 2px; }
+.phone.android .dlg .acts.row { flex-direction: row; justify-content: flex-end; }
+.phone.android .dlg .acts button { border: 0; color: var(--app-2); font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: 20px; text-align: right; }
+.phone.android .dlg.system .acts { flex-direction: column; }
+.phone.android .dlg.system .acts button { background: var(--app-field); text-align: center; border-radius: 20px; margin-top: 4px; color: var(--app-ink); }
+.phone.android .dlg.system .t { text-align: center; font-size: 18px; }
+
+.banner {
+  position: absolute; left: 8px; right: 8px; top: 50px; z-index: 30;
+  background: var(--banner-bg); color: var(--app-ink); border-radius: 20px; padding: 12px 14px;
+  display: flex; gap: 10px; align-items: flex-start; text-align: left; border: 0; font: inherit; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25); animation: drop 0.35s ease-out;
+}
+.phone.android .banner { top: 38px; border-radius: 18px; }
+.banner .ic { width: 36px; height: 36px; border-radius: 9px; flex: none; background: var(--app-2); color: var(--on-color); display: grid; place-items: center; font-weight: 800; font-size: 17px; }
+.banner .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 14px; }
+.banner .meta { font-size: 12px; color: var(--app-sub); display: flex; justify-content: space-between; }
+.banner b { font-size: 15px; }
+@keyframes drop { from { transform: translateY(-120%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.toast { position: absolute; left: 20px; right: 20px; bottom: 34px; z-index: 40; background: var(--toast-bg); color: var(--on-color); border-radius: 12px; padding: 12px 14px; font-size: 14px; animation: fade 0.25s; }
+.phone.android .toast { border-radius: 24px; text-align: center; }
+@keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.35); border-top-color: var(--on-color); animation: spin 0.8s linear infinite; align-self: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.menu { position: absolute; right: 8px; top: 8px; z-index: 25; background: var(--app-bg); color: var(--app-ink); border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,0.25); display: flex; flex-direction: column; min-width: 210px; padding: 6px 0; }
+.menu button { font: inherit; text-align: left; border: 0; background: none; padding: 12px 18px; cursor: pointer; color: inherit; }
+.menu-catch { position: absolute; inset: 0; z-index: 24; background: transparent; border: 0; }
+
+/* ---------- bench (controls) ---------- */
+.bench { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h2 { margin: 0; font-size: 15px; font-weight: 600; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.card h2 small { font-family: var(--font-mono); font-weight: 400; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.card p { margin: 0; color: var(--muted); font-size: 14px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1100px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; flex-wrap: wrap; }
+.seg button { font: inherit; font-size: 14px; border: 0; background: none; color: var(--ink); padding: 7px 12px; border-radius: 7px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.b {
+  font: inherit; font-size: 14px; font-weight: 500; border-radius: 8px; padding: 8px 12px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+.b.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.b:disabled { opacity: 0.5; cursor: default; }
+select.b { padding-right: 8px; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, .opt:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.screen button:focus-visible { outline-color: var(--app-4); }
+
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.t th, table.t td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t th { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+table.t td.num { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.tbl { overflow-x: auto; }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.on { color: var(--good); border-color: currentColor; }
+.pill.off { opacity: 0.7; }
+.pill.na { color: var(--warn); border-color: currentColor; }
+.log { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; }
+.log .entry { border-left: 3px solid var(--accent); padding: 2px 0 2px 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.log .entry .h { font-size: 13px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.log .entry .h span { color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
+pre.code { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-family: var(--font-mono); font-size: 12px; line-height: 1.45; overflow-x: auto; white-space: pre; }
+textarea.json { width: 100%; min-height: 150px; font-family: var(--font-mono); font-size: 12px; background: var(--code-bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px; resize: vertical; }
+.msg { font-size: 13px; }
+.msg.err { color: var(--warn); }
+.msg.ok { color: var(--good); }
+details summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+details[open] summary { margin-bottom: 10px; }
+.note { font-size: 13px; color: var(--muted); }
+code { font-family: var(--font-mono); font-size: 0.9em; }
+footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
+
+@media (max-width: 460px) {
+  .phone { padding: 8px; border-radius: 40px; height: 720px; }
+  .screen { border-radius: 33px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Sentinel · participant app prototype</div>
+    <h1>How Sentinel feels on Beiwe2</h1>
+    <p class="lede">A clickable copy of the Beiwe2 participant app with example Sentinel EMAs. It uses the real app's screens, wording, question types and skip logic. Nothing is uploaded, and the study content is example material to replace.</p>
+  </header>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone ios" id="phone">
+        <div class="screen" id="screen"></div>
+      </div>
+      <p class="phone-caption" id="phoneCaption"></p>
+    </div>
+
+    <div class="bench">
+      <div class="row2">
+        <section class="card" aria-labelledby="h-device">
+          <h2 id="h-device">Phone <small>platform</small></h2>
+          <div class="seg" role="group" aria-label="Platform">
+            <button type="button" data-ctl="platform" data-v="ios" aria-pressed="true">iPhone</button>
+            <button type="button" data-ctl="platform" data-v="android" aria-pressed="false">Android</button>
+          </div>
+          <p id="platformNote"></p>
+        </section>
+        <section class="card" aria-labelledby="h-build">
+          <h2 id="h-build">App build <small>branding</small></h2>
+          <div class="seg" role="group" aria-label="App build">
+            <button type="button" data-ctl="brand" data-v="stock" aria-pressed="true">Store app (Beiwe2)</button>
+            <button type="button" data-ctl="brand" data-v="sentinel" aria-pressed="false">Own build (Sentinel)</button>
+          </div>
+          <p id="brandNote"></p>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="h-sim">
+        <h2 id="h-sim">Simulate <small>what the server would trigger</small></h2>
+        <div class="actions">
+          <select class="b" id="notifySurvey" aria-label="Survey to push"></select>
+          <button type="button" class="b primary" data-ctl="notify">Send push notification</button>
+        </div>
+        <div class="actions">
+          <button type="button" class="b" data-ctl="skip">Skip to main screen</button>
+          <button type="button" class="b" data-ctl="reset">Start over (new participant)</button>
+        </div>
+        <p class="note" id="simNote">Push notifications start working once the participant has registered.</p>
+      </section>
+
+      <div class="row2">
+        <section class="card" aria-labelledby="h-sched">
+          <h2 id="h-sched">Survey schedule <small>set on the study website</small></h2>
+          <div class="tbl"><table class="t" id="schedTable"></table></div>
+          <p class="note">Beiwe also supports schedules relative to a participant's dates (for example day 3 after enrollment) and one-off absolute dates.</p>
+        </section>
+        <section class="card" aria-labelledby="h-passive">
+          <h2 id="h-passive">Passive sensing <small id="passivePlatform">on iPhone</small></h2>
+          <div class="tbl"><table class="t" id="passiveTable"></table></div>
+          <p class="note">Runs in the background with no participant interaction. GPS feeds Forest's home-stay measures (time at home, distance from home, places visited).</p>
+        </section>
+      </div>
+
+      <section class="card" aria-labelledby="h-log">
+        <h2 id="h-log">What the server receives <small>this session</small></h2>
+        <div class="log" id="log"></div>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary>Try your own survey</summary>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <p>Paste a study configuration exported from a Beiwe study page (Study → Export study settings), a single survey object, or a plain list of questions. The app reloads with it. Deleted surveys are skipped.</p>
+            <textarea class="json" id="jsonIn" spellcheck="false" aria-label="Survey JSON"></textarea>
+            <div class="actions">
+              <button type="button" class="b primary" data-ctl="loadjson">Load into app</button>
+              <button type="button" class="b" data-ctl="example">Restore Sentinel example</button>
+            </div>
+            <div class="msg" id="jsonMsg" role="status"></div>
+          </div>
+        </details>
+      </section>
+    </div>
+  </div>
+
+  <footer>Built from the open-source <a href="https://github.com/onnela-lab/beiwe-ios">beiwe-ios</a> and <a href="https://github.com/onnela-lab/beiwe-android">beiwe-android</a> apps (BSD-3): wording, colors, question types and <code>display_if</code> logic follow their code. Screens are approximations, not pixel copies. Phone numbers are fictional.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- example Sentinel study, in Beiwe's export format ----------
+  // Timings are Beiwe's weekly format: 7 arrays (Sunday..Saturday) of seconds after midnight.
+  const H = h => Math.round(h * 3600);
+  const everyDay = secs => Array.from({ length: 7 }, () => secs.slice());
+
+  const SENTINEL_STUDY = {
+    device_settings: {
+      gps: true, gps_on_duration_seconds: 90, gps_off_duration_seconds: 810,
+      accelerometer: true, accelerometer_on_duration_seconds: 10, accelerometer_off_duration_seconds: 20,
+      gyro: true, gyro_on_duration_seconds: 10, gyro_off_duration_seconds: 20,
+      magnetometer: false, devicemotion: false,
+      power_state: true, proximity: true, reachability: true,
+      wifi: false, bluetooth: false, calls: true, texts: true,
+      upload_data_files_frequency_seconds: 3600,
+      allow_upload_over_cellular_data: false,
+      use_anonymized_hashing: true,
+      call_clinician_button_text: "Call Study Team",
+      survey_submit_success_toast_text: "Thank you, your answers are saved. The study team does not see them right away. If you need help now, press \"Call Study Team\".",
+      about_page_text: "Sentinel uses this app to understand daily routines, mood and time spent at home.\n\nThe app asks short check-in questions a few times a day and collects phone sensor data in the background, such as location and movement. It does not record the content of calls or messages, and the names and numbers of the people you contact are replaced with codes.\n\nThe app knows you only by your study ID. The study team does not watch your answers in real time, so the app cannot help in an emergency.\n\n(Example text. Replace it with your IRB-approved wording.)",
+      consent_form_text: "I have read and understood the information about the Sentinel study, and all of my questions have been answered by the study team.",
+      consent_sections: {
+        welcome: { text: "Sentinel studies how daily routines, mood and time at home change over several weeks.", more: "You will use this app for the length of the study. Your study coordinator gave you a user ID and a temporary password." },
+        data_gathering: { text: "The app collects location, movement and phone-use information in the background.", more: "Location is sampled for 90 seconds about every 15 minutes. Movement sensors run in short bursts. Call and text logs record timing and length, never content." },
+        privacy: { text: "Your data is encrypted on the phone and on the study server and is linked only to your study ID.", more: "Phone numbers and Wi-Fi names are replaced with random codes before they leave the phone." },
+        study_survey: { text: "You will get short check-ins four times a day, plus a morning and an evening survey.", more: "Each check-in takes about one minute. You can skip any question." },
+        time_commitment: { text: "About 6 minutes a day, for the length of the study.", more: "Keep the app installed and your phone charged. You do not need to open the app except to answer surveys." },
+        withdrawing: { text: "You can stop at any time by telling the study team.", more: "Data collected before you withdraw may still be used, as described in your consent document." }
+      }
+    },
+    surveys: [
+      {
+        id: 101, name: "Momentary check-in", survey_type: "tracking_survey", deleted: false,
+        settings: { always_available: false, randomize: false },
+        timings: everyDay([H(9), H(13), H(17), H(21)]),
+        content: [
+          { question_id: "ema-intro", question_type: "info_text_box", question_text: "## Quick check-in\nThink about **the last hour**. This takes about a minute." },
+          { question_id: "ema-mood", question_type: "slider", question_text: "How is your mood right now?\n\n0 = very bad, 10 = very good", min: "0", max: "10" },
+          { question_id: "ema-stress", question_type: "slider", question_text: "How stressed do you feel right now?\n\n0 = not at all, 10 = extremely", min: "0", max: "10" },
+          { question_id: "ema-where", question_type: "radio_button", question_text: "Where are you right now?", answers: [{ text: "At home" }, { text: "Someone else's home" }, { text: "Work or school" }, { text: "Outdoors" }, { text: "Another indoor place" }] },
+          { question_id: "ema-away", question_type: "radio_button", question_text: "How long ago did you leave home?", answers: [{ text: "Less than 1 hour" }, { text: "1 to 3 hours" }, { text: "3 to 6 hours" }, { text: "More than 6 hours" }], display_if: { ">": ["ema-where", 0] } },
+          { question_id: "ema-with", question_type: "radio_button", question_text: "Who are you with?", answers: [{ text: "Alone" }, { text: "Partner or family" }, { text: "Friends" }, { text: "Coworkers or classmates" }, { text: "Other people" }] },
+          { question_id: "ema-did", question_type: "checkbox", question_text: "Since the last check-in, did you… (select all that apply)", answers: [{ text: "Exercise or walk" }, { text: "Eat a meal" }, { text: "Nap" }, { text: "Drink alcohol" }, { text: "None of these" }] },
+          { question_id: "ema-note", question_type: "free_response", text_field_type: "SINGLE_LINE_TEXT", question_text: "Anything else worth noting? (optional)" }
+        ]
+      },
+      {
+        id: 102, name: "Morning sleep diary", survey_type: "tracking_survey", deleted: false,
+        settings: { always_available: false },
+        timings: everyDay([H(8)]),
+        content: [
+          { question_id: "sl-bed", question_type: "time", question_text: "What time did you go to bed last night?" },
+          { question_id: "sl-wake", question_type: "time", question_text: "What time did you wake up this morning?" },
+          { question_id: "sl-wakings", question_type: "free_response", text_field_type: "NUMERIC", question_text: "How many times did you wake up during the night?" },
+          { question_id: "sl-quality", question_type: "slider", question_text: "How well did you sleep?\n\n1 = very poorly, 5 = very well", min: "1", max: "5" }
+        ]
+      },
+      {
+        id: 103, name: "Evening home-stay log", survey_type: "tracking_survey", deleted: false,
+        settings: { always_available: false },
+        timings: everyDay([H(20.5)]),
+        content: [
+          { question_id: "hs-left", question_type: "radio_button", question_text: "Did you leave home today?", answers: [{ text: "No" }, { text: "Yes" }] },
+          { question_id: "hs-hours", question_type: "free_response", text_field_type: "NUMERIC", question_text: "About how many hours were you away from home in total?", display_if: { "==": ["hs-left", 1] } },
+          { question_id: "hs-why", question_type: "checkbox", question_text: "What did you leave home for?", answers: [{ text: "Work or school" }, { text: "Errands or shopping" }, { text: "Seeing people" }, { text: "Exercise" }, { text: "Medical appointment" }, { text: "Other" }], display_if: { "==": ["hs-left", 1] } },
+          { question_id: "hs-stuck", question_type: "radio_button", question_text: "What kept you at home?", answers: [{ text: "I chose to stay in" }, { text: "Not feeling well" }, { text: "Weather" }, { text: "No transport" }, { text: "Other" }], display_if: { "==": ["hs-left", 0] } },
+          { question_id: "hs-day", question_type: "slider", question_text: "Overall, how was today?\n\n0 = very bad, 10 = very good", min: "0", max: "10" },
+          { question_id: "hs-more", question_type: "free_response", text_field_type: "MULTI_LINE_TEXT", question_text: "Anything unusual about today? (optional)" }
+        ]
+      },
+      {
+        id: 104, name: "Voice diary", survey_type: "audio_survey", deleted: false,
+        settings: { always_available: true, audio_survey_type: "compressed", bit_rate: 64000, sample_rate: 44100 },
+        timings: (() => { const t = everyDay([]); t[0] = [H(18)]; return t; })(),
+        content: [{ prompt: "Tell us about your week. When you are ready, press Record and talk for about a minute about how things have been going. Press Stop when you are finished." }]
+      }
+    ]
+  };
+
+  // ---------- platform facts (from the two app codebases) ----------
+  const SENSORS = [
+    { key: "gps", label: "GPS location", ios: true, android: true, cycle: ["gps_on_duration_seconds", "gps_off_duration_seconds"] },
+    { key: "accelerometer", label: "Accelerometer", ios: true, android: true, cycle: ["accelerometer_on_duration_seconds", "accelerometer_off_duration_seconds"] },
+    { key: "gyro", label: "Gyroscope", ios: true, android: true, cycle: ["gyro_on_duration_seconds", "gyro_off_duration_seconds"] },
+    { key: "magnetometer", label: "Magnetometer", ios: true, android: false, cycle: ["magnetometer_on_duration_seconds", "magnetometer_off_duration_seconds"] },
+    { key: "devicemotion", label: "Device motion", ios: true, android: false, cycle: ["devicemotion_on_duration_seconds", "devicemotion_off_duration_seconds"] },
+    { key: "power_state", label: "Screen and power events", ios: true, android: true },
+    { key: "proximity", label: "Proximity sensor", ios: true, android: false },
+    { key: "reachability", label: "Network reachability", ios: true, android: false },
+    { key: "calls", label: "Call log (no content)", ios: false, android: true },
+    { key: "texts", label: "Text log (no content)", ios: false, android: true },
+    { key: "wifi", label: "Wi-Fi scans (hashed)", ios: false, android: true },
+    { key: "bluetooth", label: "Bluetooth scans (hashed)", ios: false, android: true }
+  ];
+  const CONSENT_TITLES = {
+    welcome: "Welcome", data_gathering: "Data Gathering", privacy: "Privacy", data_use: "Data Use",
+    time_commitment: "Time Commitment", study_survey: "Study Survey", study_tasks: "Study Tasks", withdrawing: "Withdrawing"
+  };
+  const CLINICIAN_PHONE = "(555) 010-0142";
+  const RA_PHONE = "(555) 010-0187";
+
+  // ---------- state ----------
+  const S = {
+    platform: "ios",
+    brand: "stock",
+    study: SENTINEL_STUDY,
+    screen: "welcome",
+    form: { server: "sentinel.example.edu", uid: "x7k2m9qa", temp: "", pw: "", pw2: "" },
+    consentIdx: 0,
+    learnMore: false,
+    perm: null,           // { steps, i }
+    grants: {},
+    registered: false,
+    active: {},           // survey id -> "new" | "incomplete"
+    run: null,            // survey in progress
+    audio: null,
+    dialog: null,
+    banner: null,
+    toast: null,
+    menu: false,
+    loading: false,
+    log: []
+  };
+
+  const $ = sel => document.querySelector(sel);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const appName = () => S.brand === "sentinel" ? "Sentinel" : (S.platform === "ios" ? "Beiwe2" : "Beiwe");
+  const brandShort = () => S.brand === "sentinel" ? "Sentinel" : "Beiwe";
+  const ds = () => S.study.device_settings || {};
+  const surveys = () => (S.study.surveys || []).filter(s => !s.deleted);
+  const surveyName = s => s.name || (s.survey_type === "audio_survey" ? "Audio Survey" : "Survey");
+  const nowClock = () => new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M$/i, "");
+  const stamp = () => new Date().toISOString().replace("T", " ").slice(0, 19);
+
+  // Beiwe renders question text as markdown; this covers the subset studies actually use.
+  function md(text) {
+    const inline = s => s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*/g, "$1<em>$2</em>");
+    const out = [];
+    let list = null;
+    for (const raw of esc(text).split(/\r?\n/)) {
+      const line = raw.trim();
+      const h = line.match(/^(#{1,6})\s*(.*)$/);
+      const li = line.match(/^(?:•|-|\*)\s+(.*)$/);
+      if (li) { (list ||= []).push(`<li>${inline(li[1])}</li>`); continue; }
+      if (list) { out.push(`<ul>${list.join("")}</ul>`); list = null; }
+      if (!line) continue;
+      if (h) out.push(`<h${h[1].length < 3 ? 3 : 4}>${inline(h[2])}</h${h[1].length < 3 ? 3 : 4}>`);
+      else out.push(`<p>${inline(line)}</p>`);
+    }
+    if (list) out.push(`<ul>${list.join("")}</ul>`);
+    return `<div class="md">${out.join("")}</div>`;
+  }
+
+  // ---------- display_if, mirroring beiwe-ios RK/surveyQuestionDisplayLogic.swift ----------
+  function shown(q, answers) {
+    if (!q.display_if) return true;
+    try { return evalLogic(q.display_if, answers); } catch (e) { return true; }
+  }
+  function evalLogic(node, answers) {
+    const op = Object.keys(node)[0];
+    const p = node[op];
+    if (op === "and") return p.every(x => evalLogic(x, answers));
+    if (op === "or") return p.some(x => evalLogic(x, answers));
+    if (op === "not") return !evalLogic(p, answers);
+    const [qid, target] = p;
+    const a = answers[qid];
+    if (a === undefined || a === null || a === "" || (Array.isArray(a) && !a.length)) return false;
+    const values = (Array.isArray(a) ? a : [a]).map(Number).filter(v => !Number.isNaN(v));
+    const cmp = { "==": (x, y) => x === y, "<": (x, y) => x < y, "<=": (x, y) => x <= y, ">": (x, y) => x > y, ">=": (x, y) => x >= y }[op];
+    return cmp ? values.some(v => cmp(v, Number(target))) : true;
+  }
+
+  // ---------- icons ----------
+  const ICON = {
+    person: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+    info: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
+    more: '<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
+    back: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    close: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  };
+
+  // ---------- rendering ----------
+  function render() {
+    const phone = $("#phone");
+    phone.className = "phone " + S.platform;
+    applyBrand();
+    const view = screens[S.screen]();
+    const onColor = !!view.onColor;
+    $("#screen").innerHTML =
+      `<div class="statusbar${onColor ? " on-color" : ""}" style="${view.barBg ? `background:${view.barBg}` : ""}"><span>${nowClock()}</span><div class="island"></div><span class="sb-right">5G <span class="batt"></span></span></div>` +
+      `<div class="app ${view.cls || ""}">${view.html}${overlays()}</div>` +
+      `<div class="homebar${onColor ? " on-color" : ""}" style="${view.homeBg ? `background:${view.homeBg}` : ""}"><span></span></div>`;
+    renderBench();
+  }
+
+  function applyBrand() {
+    const r = document.documentElement.style;
+    if (S.brand === "sentinel") {
+      r.setProperty("--app-1", "#3e5c86"); r.setProperty("--app-2", "#22385a"); r.setProperty("--app-3", "#152238");
+      r.setProperty("--app-4", "#c8862a"); r.setProperty("--app-grad-top", "#22385a"); r.setProperty("--app-grad-bottom", "#6286b4");
+    } else {
+      ["--app-1", "--app-2", "--app-3", "--app-4", "--app-grad-top", "--app-grad-bottom"].forEach(k => r.removeProperty(k));
+    }
+  }
+
+  function overlays() {
+    let h = "";
+    if (S.menu) h += menuHtml();
+    if (S.dialog) h += dialogHtml(S.dialog);
+    if (S.banner) {
+      const s = surveys().find(x => x.id === S.banner);
+      const audio = s && s.survey_type === "audio_survey";
+      h += `<button type="button" class="banner" data-a="openBanner"><span class="ic">${brandShort()[0]}</span><span class="txt"><span class="meta"><span>${esc(appName().toUpperCase())}</span><span>now</span></span><b>${esc(S.platform === "android" ? `Survey: ${surveyName(s)}` : surveyName(s))}</b><span>${audio ? "A new audio question has arrived and is awaiting completion." : (S.platform === "android" ? "Please fill out this survey." : "A new survey has arrived and is awaiting completion.")}</span></span></button>`;
+    }
+    if (S.toast) h += `<div class="toast" role="status">${esc(S.toast)}</div>`;
+    return h;
+  }
+
+  function dialogHtml(d) {
+    const ios = S.platform === "ios";
+    const acts = d.buttons.map((b, i) => `<button type="button" class="${b.cls || ""}" data-a="dlg" data-i="${i}">${esc(b.label)}</button>`).join("");
+    if (d.sheet && ios) {
+      const main = d.buttons.filter(b => !b.cancel), cancel = d.buttons.find(b => b.cancel);
+      return `<div class="dim sheet"><div class="dlg sheet" role="dialog" aria-label="Menu"><div class="group acts">${main.map(b => `<button type="button" class="${b.cls || ""}" data-a="dlg" data-i="${d.buttons.indexOf(b)}">${esc(b.label)}</button>`).join("")}</div>${cancel ? `<div class="group acts"><button type="button" class="strong" data-a="dlg" data-i="${d.buttons.indexOf(cancel)}">${esc(cancel.label)}</button></div>` : ""}</div></div>`;
+    }
+    const rowActs = !ios && !d.system && d.buttons.length <= 2;
+    return `<div class="dim"><div class="dlg${d.system ? " system" : ""}" role="dialog" aria-modal="true" aria-label="${esc(d.title || "Alert")}"><div class="body">${d.title ? `<div class="t">${esc(d.title)}</div>` : ""}${d.msg ? `<div class="m">${esc(d.msg)}</div>` : ""}</div><div class="acts${rowActs ? " row" : ""}">${acts}</div></div></div>`;
+  }
+
+  function menuHtml() {
+    return `<button type="button" class="menu-catch" data-a="closeMenu" aria-label="Close menu"></button><div class="menu" role="menu">
+      <button type="button" role="menuitem" data-a="about">About This App</button>
+      <button type="button" role="menuitem" data-a="changePw">Change Password</button>
+      <button type="button" role="menuitem" data-a="callRA">Call Research Assistant</button>
+      <button type="button" role="menuitem" data-a="signOut">Sign Out</button></div>`;
+  }
+
+  const iosNav = (title, left = "", right = "") =>
+    `<div class="navbar"><div class="side">${left}</div><div class="title">${esc(title)}</div><div class="side right">${right}</div></div>`;
+  const droidBar = (title, back = false, more = false) =>
+    `<div class="actionbar">${back ? `<button type="button" class="navbtn" data-a="${back}" aria-label="Back">${ICON.back}</button>` : ""}<div class="title">${esc(title)}</div>${more ? `<button type="button" class="navbtn" data-a="openMenu" aria-label="More options">${ICON.more}</button>` : ""}</div>`;
+
+  const screens = {
+    welcome() {
+      return {
+        cls: "tinted", onColor: true, barBg: "var(--app-1)", homeBg: "var(--app-1)",
+        html: `<div class="scroll"><div class="pad" style="padding-top:60px">
+          <h2 class="rk-title">${S.brand === "sentinel" ? "Welcome to Sentinel" : "Welcome"}</h2>
+          <p class="rk-sub">${S.brand === "sentinel" ? "Please have the user ID and temporary password from your study coordinator ready." : "Welcome to the Beiwe Research Platform. Please have your user ID and password, which were given to you by your clinician, available as you begin the registration process."}</p>
+        </div></div><div class="bottom"><button type="button" class="btn light" data-a="toRegister">Register</button></div>`
+      };
+    },
+
+    register() {
+      const ios = S.platform === "ios";
+      const f = S.form;
+      const fld = (id, label, type, hint) =>
+        `<div class="field"><label for="f-${id}">${label}</label><input id="f-${id}" data-f="${id}" type="${type}" value="${esc(f[id])}" placeholder="${esc(hint)}" autocomplete="off" autocapitalize="off" spellcheck="false"></div>`;
+      const form = `
+        ${fld("server", "Study server", "text", "For example, www.example.com")}
+        ${fld("uid", "User ID", "text", "User ID")}
+        ${fld("temp", "Temporary password", "password", "Temp password")}
+        ${fld("pw", "New password", "password", "At least 6 characters")}
+        ${fld("pw2", "Confirm password", "password", "At least 6 characters")}
+        <p style="font-size:13px;opacity:.85">Prototype: any user ID and temporary password work.</p>`;
+      if (S.loading) {
+        return { cls: ios ? "tinted" : "", onColor: ios, barBg: ios ? "var(--app-1)" : "var(--app-3)", homeBg: ios ? "var(--app-1)" : "", html: `<div class="scroll"><div class="pad" style="padding-top:120px;align-items:center;text-align:center"><div class="spinner" style="${ios ? "" : "border-color:var(--app-line);border-top-color:var(--app-2)"}"></div><p>Registering with ${esc(f.server)}…</p></div></div>` };
+      }
+      if (ios) {
+        return {
+          cls: "tinted", onColor: true, barBg: "var(--app-1)", homeBg: "var(--app-1)",
+          html: `${iosNav("", `<button type="button" class="navbtn text" data-a="toWelcome">Cancel</button>`)}<div class="scroll"><div class="pad"><h2 class="rk-title">Register for Study</h2>${form}</div></div><div class="bottom"><button type="button" class="btn light" data-a="register">Register</button></div>`
+        };
+      }
+      return {
+        onColor: true, barBg: "var(--app-3)",
+        html: `${droidBar("Register")}<div class="scroll"><div class="pad"><h2>Welcome to the study</h2>${form}<button type="button" class="btn" data-a="register">Register</button></div></div>`
+      };
+    },
+
+    consent() {
+      const ios = S.platform === "ios";
+      const st = ds();
+      const keys = Object.keys(st.consent_sections || {}).filter(k => (st.consent_sections[k].text || "").trim());
+      if (!ios || S.consentIdx >= keys.length) {
+        const review = `<div class="scroll"><div class="pad">${ios ? `<h2 class="rk-title">Review</h2>` : `<h2>Consent Form</h2>`}${md(st.consent_form_text || "The Consent Form Goes Here.")}</div></div>
+          <div class="bottom"><button type="button" class="btn" data-a="consentYes">${ios ? "Agree" : "I consent"}</button><button type="button" class="btn ghost" data-a="consentNo">${ios ? "Disagree" : "I do not consent"}</button></div>`;
+        return ios
+          ? { html: `${iosNav(`${brandShort()} Consent`, keys.length ? `<button type="button" class="navbtn text" data-a="consentBack">Back</button>` : "")}${review}` }
+          : { onColor: true, barBg: "var(--app-3)", html: `${droidBar("Consent Form")}${review}` };
+      }
+      const k = keys[S.consentIdx];
+      const sec = st.consent_sections[k];
+      return {
+        html: `${iosNav(`${S.consentIdx + 1} of ${keys.length}`, S.consentIdx ? `<button type="button" class="navbtn text" data-a="consentBack">Back</button>` : "")}
+          <div class="scroll"><div class="pad"><h2 class="rk-title">${esc(CONSENT_TITLES[k] || k)}</h2>${md(sec.text)}
+          ${sec.more ? (S.learnMore ? `<div style="background:var(--app-field);border-radius:12px;padding:14px">${md(sec.more)}</div>` : `<button type="button" class="linkish" data-a="learnMore">Learn more</button>`) : ""}
+          </div></div><div class="bottom"><button type="button" class="btn" data-a="consentNext">Next</button></div>`
+      };
+    },
+
+    permIntro() {
+      const ios = S.platform === "ios";
+      const body = ios
+        ? `${appName()} needs access to your location for the passive data gathering capabilities of this app. ${appName()} will also send you notifications to notify you of new surveys.`
+        : `${appName()} will now ask for the permissions this study needs. Please press Allow on each request. Some can only be set in the phone's Settings, and ${appName()} will take you there.`;
+      return ios
+        ? { html: `${iosNav("")}<div class="scroll"><div class="pad"><h2 class="rk-title">Permissions</h2><p class="rk-sub">${esc(body)}</p></div></div><div class="bottom"><button type="button" class="btn" data-a="permStart">Permissions</button></div>` }
+        : { onColor: true, barBg: "var(--app-3)", html: `${droidBar(appName())}<div class="scroll"><div class="pad"><h2>Permissions</h2><p>${esc(body)}</p></div></div><div class="bottom"><button type="button" class="btn" data-a="permStart">Continue</button></div>` };
+    },
+
+    home() {
+      const ios = S.platform === "ios";
+      const list = surveys().filter(s => S.active[s.id] || (s.settings && s.settings.always_available));
+      const cells = list.map(s => {
+        const st = S.active[s.id];
+        const badge = st === "new" ? `<span class="badge new">${ios ? "new" : "new"}</span>` : st === "incomplete" ? `<span class="badge incomplete">incomplete</span>` : `<span class="badge">Available</span>`;
+        return `<button type="button" class="cell" data-a="openSurvey" data-id="${s.id}"><span class="grow"><span class="name">${esc(surveyName(s))}</span><span class="kind">${s.survey_type === "audio_survey" ? "Audio Survey" : "Survey"}</span></span>${badge}</button>`;
+      }).join("");
+      const callBtn = `<button type="button" class="btn orange" data-a="callClinician">${esc(ds().call_clinician_button_text || "Call My Clinician")}</button>`;
+      if (ios) {
+        return {
+          cls: "grad", onColor: true, barBg: "var(--app-grad-top)", homeBg: "var(--app-grad-bottom)",
+          html: `${iosNav("", `<button type="button" class="navbtn" data-a="openSheet" aria-label="Account">${ICON.person}</button>`, `<button type="button" class="navbtn" data-a="about" aria-label="About">${ICON.info}</button>`)}
+            <div class="scroll"><div class="pad"><h2 style="font-size:26px">${S.brand === "sentinel" ? "Sentinel" : "Pending Study Tasks"}</h2>
+            ${S.brand === "sentinel" ? `<p style="margin-top:-8px;opacity:.9">Pending study tasks</p>` : ""}
+            <div class="cards">${cells || `<div class="empty">There are no active surveys to take at this time.</div>`}</div></div></div>
+            <div class="bottom" style="background:transparent">${callBtn}</div>`
+        };
+      }
+      return {
+        onColor: true, barBg: "var(--app-3)",
+        html: `${droidBar(appName(), false, true)}<div class="scroll"><div class="pad"><h2>Welcome to ${esc(brandShort())}!</h2>
+          <div class="cards">${list.map(s => `<button type="button" class="cell permsurvey" data-a="openSurvey" data-id="${s.id}"><span class="grow"><span class="name">${esc(surveyName(s))}</span></span>${S.active[s.id] === "new" ? `<span class="badge new">new</span>` : ""}</button>`).join("") || `<p style="color:var(--app-sub)">No surveys right now. New surveys arrive as notifications.</p>`}</div>
+          </div></div><div class="bottom">${callBtn}</div>`
+      };
+    },
+
+    survey() {
+      const ios = S.platform === "ios";
+      const r = S.run;
+      const qs = r.survey.content;
+      if (r.submitPage) return submitScreen();
+      const q = qs[r.idx];
+      const n = r.path.length;
+      const total = qs.filter(x => shown(x, r.answers)).length;
+      const body = `<div class="scroll"><div class="pad">${ios ? `<span class="progress">Question ${n} of ${total}</span>` : ""}${questionHtml(q, r.answers[q.question_id])}</div></div>`;
+      if (ios) {
+        const answered = isAnswered(q, r.answers[q.question_id]);
+        return {
+          html: `${iosNav("", `<button type="button" class="navbtn text" data-a="${n > 1 ? "qBack" : "surveyCancel"}">${n > 1 ? "Back" : "Cancel"}</button>`, n > 1 ? `<button type="button" class="navbtn text" data-a="surveyCancel">Cancel</button>` : "")}${body}
+            <div class="bottom"><button type="button" class="btn" data-a="qNext">${q.question_type === "info_text_box" ? "Continue" : "Next"}</button>${q.question_type !== "info_text_box" && !answered ? `<button type="button" class="btn ghost" data-a="qNext">Skip this question</button>` : ""}</div>`
+        };
+      }
+      return {
+        onColor: true, barBg: "var(--app-3)",
+        html: `${droidBar(surveyName(r.survey), "surveyCancel")}${body}<div class="bottom"><div class="btn-row"><button type="button" class="btn ghost" data-a="qBack" ${n > 1 ? "" : "disabled"}>Back</button><button type="button" class="btn" data-a="qNext">Next</button></div></div>`
+      };
+    },
+
+    audio() {
+      const ios = S.platform === "ios";
+      const a = S.audio;
+      const s = a.survey;
+      const prompt = (s.content[0] && (s.content[0].prompt || s.content[0].question_text)) || "We would like to know how your day is going. When you are ready, please press \"Record\" and speak for about 2 minutes.";
+      const t = Math.floor(a.elapsed);
+      const bars = Array.from({ length: 24 }, (_, i) => `<i style="height:${a.recording ? 6 + Math.round(Math.abs(Math.sin((a.elapsed * 6) + i * 0.9)) * 36 * (0.4 + ((i * 7) % 5) / 6)) : 6}px"></i>`).join("");
+      const inner = `<div class="scroll"><div class="pad">${md(prompt)}
+        <div class="rec"><div class="rec-time">${String(Math.floor(t / 60)).padStart(1, "0")}:${String(t % 60).padStart(2, "0")}</div>
+        <div class="meter" aria-hidden="true">${bars}</div>
+        <button type="button" class="recbtn${a.recording ? " on" : ""}" data-a="recToggle" aria-label="${a.recording ? "Stop" : "Record"}"><span></span></button>
+        <span class="slider-hint">${a.recording ? "Recording… press to stop" : a.done ? "Recording saved on the phone, ready to send" : "Press to record"}</span>
+        ${a.done && !a.recording ? `<button type="button" class="btn ghost" data-a="recPlay" style="width:auto">${a.playing ? "Stop" : "Play recording"}</button>` : ""}
+        <p style="font-size:12px;color:var(--app-sub);text-align:center">Simulated: the prototype does not use the microphone.</p></div></div></div>
+        <div class="bottom"><button type="button" class="btn" data-a="recSave" ${a.done && !a.recording ? "" : "disabled"}>Save</button></div>`;
+      return ios
+        ? { html: `${iosNav("Audio Quest.", `<button type="button" class="navbtn text" data-a="recCancel">Cancel</button>`)}${inner}` }
+        : { onColor: true, barBg: "var(--app-3)", html: `${droidBar("Make a Voice Recording", "recCancel")}${inner}` };
+    },
+
+    about() {
+      const ios = S.platform === "ios";
+      const text = ds().about_page_text || "";
+      const inner = `<div class="scroll"><div class="pad">${md(text)}<p style="color:var(--app-sub);font-size:13px">Study server: ${esc(S.form.server)} · User ID: ${esc(S.form.uid)}</p></div></div>`;
+      return ios
+        ? { html: `${iosNav(`About ${brandShort()}`, `<button type="button" class="navbtn text" data-a="toHome">Done</button>`)}${inner}` }
+        : { onColor: true, barBg: "var(--app-3)", html: `${droidBar(`About ${brandShort()}`, "toHome")}${inner}` };
+    },
+
+    password() {
+      const ios = S.platform === "ios";
+      const inner = `<div class="scroll"><div class="pad"><h2>Change your password</h2>
+        <div class="field"><label for="cp1">Current password</label><input id="cp1" type="password"></div>
+        <div class="field"><label for="cp2">New password</label><input id="cp2" type="password" placeholder="At least 6 characters"></div>
+        <div class="field"><label for="cp3">Confirm new password</label><input id="cp3" type="password"></div>
+        <button type="button" class="btn" data-a="pwSave">Change password</button></div></div>`;
+      return ios
+        ? { html: `${iosNav("Change Password", `<button type="button" class="navbtn text" data-a="toHome">Cancel</button>`)}${inner}` }
+        : { onColor: true, barBg: "var(--app-3)", html: `${droidBar("Change Password", "toHome")}${inner}` };
+    },
+
+    signedOut() {
+      const ios = S.platform === "ios";
+      const inner = `<div class="scroll"><div class="pad" style="padding-top:40px"><h2>${ios ? "Welcome back" : `Log in to ${esc(brandShort())}`}</h2>
+        <p style="color:var(--app-sub)">User ID: ${esc(S.form.uid)}</p>
+        <div class="field"><label for="li">Password</label><input id="li" type="password" value="sentinel1"></div>
+        <button type="button" class="btn" data-a="logIn">Log In</button>
+        <button type="button" class="linkish" data-a="forgot">Forgot password</button></div></div>`;
+      return ios ? { html: `${iosNav("Log In")}${inner}` } : { onColor: true, barBg: "var(--app-3)", html: `${droidBar("Log In")}${inner}` };
+    }
+  };
+
+  function submitScreen() {
+    const ios = S.platform === "ios";
+    const r = S.run;
+    const visible = r.survey.content.filter(q => q.question_type !== "info_text_box" && shown(q, r.answers));
+    const missing = visible.filter(q => !isAnswered(q, r.answers[q.question_id]));
+    const inner = `<div class="scroll"><div class="pad">
+      ${ios ? `<h2 class="rk-title">Confirm Submission</h2><p>Thanks! You have finished answering all of the survey questions. Pressing the submit button will now schedule your answers to be delivered.</p>` : `<h2>Submit Answers</h2>`}
+      ${missing.length ? `<p style="color:var(--app-sub)">You did not answer ${missing.length === 1 ? "this question" : `these ${missing.length} questions`}. Tap one to go back to it:</p><div class="unanswered">${missing.map(q => `<button type="button" data-a="gotoQ" data-q="${esc(q.question_id)}">${esc(stripMd(q.question_text).slice(0, 80))}</button>`).join("")}</div>` : (ios ? "" : `<p>You answered every question.</p>`)}
+      </div></div><div class="bottom"><button type="button" class="btn" data-a="submit">${ios ? "Submit Survey" : "Submit Answers"}</button>${ios ? "" : `<button type="button" class="btn ghost" data-a="qBack">Back</button>`}</div>`;
+    return ios
+      ? { html: `${iosNav("", `<button type="button" class="navbtn text" data-a="qBack">Back</button>`, `<button type="button" class="navbtn text" data-a="surveyCancel">Cancel</button>`)}${inner}` }
+      : { onColor: true, barBg: "var(--app-3)", html: `${droidBar(surveyName(r.survey), "surveyCancel")}${inner}` };
+  }
+
+  const stripMd = t => String(t || "").replace(/[#*]/g, "").replace(/\s+/g, " ").trim();
+
+  function isAnswered(q, a) {
+    if (q.question_type === "info_text_box") return true;
+    if (Array.isArray(a)) return a.length > 0;
+    return a !== undefined && a !== null && a !== "";
+  }
+
+  function questionHtml(q, a) {
+    const id = q.question_id;
+    const text = q.question_type === "info_text_box" ? md(q.question_text) : `<div class="qtext">${md(q.question_text)}</div>`;
+    switch (q.question_type) {
+      case "info_text_box": return text;
+      case "radio_button":
+      case "checkbox": {
+        const multi = q.question_type === "checkbox";
+        const sel = multi ? (a || []) : [a];
+        return `${text}<div class="opts" role="${multi ? "group" : "radiogroup"}">${(q.answers || []).map((o, i) => {
+          const on = sel.includes(i);
+          return `<label class="opt${on ? " sel" : ""}"><input type="${multi ? "checkbox" : "radio"}" name="q-${esc(id)}" data-ans="${multi ? "check" : "radio"}" data-i="${i}" ${on ? "checked" : ""}><span>${esc(o.text)}</span></label>`;
+        }).join("")}</div>`;
+      }
+      case "slider": {
+        const min = parseInt(q.min, 10) || 0, max = parseInt(q.max, 10) || 10;
+        const touched = a !== undefined;
+        const v = touched ? a : Math.round((min + max) / 2);
+        return `${text}<div class="slider-wrap${touched ? "" : " untouched"}"><div class="slider-val" id="sv">${touched ? v : ""}</div>
+          <input type="range" id="q-slider" min="${min}" max="${max}" step="1" value="${v}" data-ans="slider" aria-label="Answer from ${min} to ${max}">
+          <div class="slider-ends"><span>${min}</span><span>${max}</span></div>${touched ? "" : `<span class="slider-hint">Tap or drag the slider to answer</span>`}</div>`;
+      }
+      case "free_response": {
+        const kind = (q.text_field_type || "MULTI_LINE_TEXT").toUpperCase();
+        if (kind === "MULTI_LINE_TEXT") return `${text}<div class="field"><textarea id="q-text" rows="5" data-ans="text">${esc(a || "")}</textarea></div>`;
+        return `${text}<div class="field"><input id="q-text" type="${kind === "NUMERIC" ? "number" : "text"}" inputmode="${kind === "NUMERIC" ? "decimal" : "text"}" value="${esc(a ?? "")}" data-ans="text"></div>`;
+      }
+      case "date": return `${text}<div class="field"><input id="q-dt" type="date" value="${esc(a || "")}" data-ans="text"></div>`;
+      case "time": return `${text}<div class="field"><input id="q-dt" type="time" value="${esc(a || "")}" data-ans="text"></div>`;
+      case "date_time": return `${text}<div class="field"><input id="q-dt" type="datetime-local" value="${esc(a || "")}" data-ans="text"></div>`;
+      default: return `${text}<p style="color:#b33">Unsupported question type: ${esc(q.question_type)}</p>`;
+    }
+  }
+
+  // ---------- bench ----------
+  function renderBench() {
+    document.querySelectorAll("[data-ctl=platform]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === S.platform)));
+    document.querySelectorAll("[data-ctl=brand]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === S.brand)));
+    $("#platformNote").textContent = S.platform === "ios"
+      ? "iOS allows location, motion and power data, but not call or text logs. Background sensing depends on the participant choosing \"Always\" for location."
+      : "Android allows call and text logs, Wi-Fi and Bluetooth. Some phone makers stop background apps to save battery, so the battery exception step matters.";
+    $("#brandNote").textContent = S.brand === "stock"
+      ? "What participants get with no app work: they install Beiwe2 from the App Store or Google Play and type in your server address. You can change the text (consent, about page, buttons, surveys), but not the name, icon or colors."
+      : "What you would get by building the lab's iOS and Android code under your own Apple and Google developer accounts: your own name, icon and colors, with the server address built in. You then also need your own Firebase project for notifications and must handle store review and updates yourself.";
+    $("#phoneCaption").textContent = ({
+      welcome: "Step 1: welcome. A participant opens the app for the first time.",
+      register: "Step 2: registration with the details from the study coordinator.",
+      consent: "Step 3: consent. Section text comes from the study settings.",
+      permIntro: "Step 4: permissions, which decide how much passive data you get.",
+      home: "Main screen. Scheduled surveys appear here and as notifications.",
+      survey: "A survey: one question per screen, with skip logic.",
+      audio: "Audio survey (voice diary).",
+      about: "About page, set in the study settings.",
+      password: "Change password, from the account menu.",
+      signedOut: "Signed out. The app keeps collecting data, and the participant logs back in to answer surveys."
+    })[S.screen] || "";
+
+    // notify select
+    const sel = $("#notifySurvey");
+    const cur = sel.value;
+    sel.innerHTML = surveys().map(s => `<option value="${s.id}">${esc(surveyName(s))}</option>`).join("");
+    if (cur && surveys().some(s => String(s.id) === cur)) sel.value = cur;
+    const canNotify = S.registered && surveys().length > 0;
+    document.querySelector("[data-ctl=notify]").disabled = !canNotify;
+    sel.disabled = !canNotify;
+    $("#simNote").textContent = canNotify
+      ? (S.grants.notifications === false ? "The participant denied notifications, so on a real phone this push would not appear. It is shown here anyway." : "This is what the participant sees when a scheduled survey arrives.")
+      : "Push notifications start working once the participant has registered.";
+
+    // schedule table
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const fmt = sec => { const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`; };
+    const rows = surveys().map(s => {
+      const t = Array.isArray(s.timings) && s.timings.length === 7 ? s.timings : null;
+      let when = "Not on a weekly schedule";
+      if (t && t.some(d => d.length)) {
+        const sig = t.map(d => d.map(fmt).join(", "));
+        when = sig.every(x => x === sig[0]) ? `Every day ${sig[0]}` : t.map((d, i) => d.length ? `${days[i]} ${d.map(fmt).join(", ")}` : "").filter(Boolean).join("; ");
+      }
+      const extra = s.settings && s.settings.always_available ? `<br><span class="pill">always available</span>` : "";
+      return `<tr><td>${esc(surveyName(s))}</td><td class="num">${esc(when)}${extra}</td><td>${(s.content || []).length}</td></tr>`;
+    }).join("");
+    $("#schedTable").innerHTML = `<thead><tr><th>Survey</th><th>Sends at</th><th>Items</th></tr></thead><tbody>${rows || `<tr><td colspan="3">No surveys loaded</td></tr>`}</tbody>`;
+
+    // passive table
+    $("#passivePlatform").textContent = S.platform === "ios" ? "on iPhone" : "on Android";
+    const d = ds();
+    const p = S.platform;
+    $("#passiveTable").innerHTML = `<thead><tr><th>Stream</th><th>Status</th><th>Cycle</th></tr></thead><tbody>` + SENSORS.map(x => {
+      const supported = x[p];
+      const enabled = !!d[x.key];
+      let status;
+      if (!supported) status = `<span class="pill na">not on ${p === "ios" ? "iOS" : "Android"}</span>`;
+      else if (!enabled) status = `<span class="pill off">off in study</span>`;
+      else if (x.key === "gps" && S.registered && S.grants.locationAlways === false) status = `<span class="pill na">limited: no "Always"</span>`;
+      else status = `<span class="pill on">collecting</span>`;
+      const cyc = x.cycle && enabled && supported ? `${d[x.cycle[0]] ?? "?"}s on, ${d[x.cycle[1]] ?? "?"}s off` : (enabled && supported ? "on events" : "");
+      return `<tr><td>${x.label}</td><td>${status}</td><td class="num">${cyc}</td></tr>`;
+    }).join("") + `</tbody>`;
+
+    // log
+    $("#log").innerHTML = S.log.length
+      ? S.log.slice().reverse().map(e => `<div class="entry"><div class="h"><strong>${esc(e.title)}</strong><span>${esc(e.time)}</span></div>${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}${e.body ? `<pre class="code">${esc(e.body)}</pre>` : ""}</div>`).join("")
+      : `<p class="note">Nothing yet. Register, then answer a survey to see the files the phone would upload.</p>`;
+  }
+
+  function logIt(title, body, note) {
+    S.log.push({ title, body, note, time: stamp() });
+  }
+
+  // CSV in the shape of Beiwe's survey_answers files.
+  function answersCsv(survey, answers) {
+    const csvq = v => /[",\n]/.test(v) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+    const lines = ["question id,question type,question text,question answer options,answer"];
+    for (const q of survey.content) {
+      if (q.question_type === "info_text_box") continue;
+      const visible = shown(q, answers);
+      let opts = "";
+      if (q.answers) opts = "[" + q.answers.map(o => o.text).join("; ") + "]";
+      else if (q.question_type === "slider") opts = `min = ${q.min}; max = ${q.max}`;
+      else if (q.question_type === "free_response") opts = `Text-field input type = ${q.text_field_type || "MULTI_LINE_TEXT"}`;
+      const a = answers[q.question_id];
+      let ans;
+      if (!visible) ans = "NOT_PRESENTED";
+      else if (!isAnswered(q, a)) ans = "NO_ANSWER_SELECTED";
+      else if (q.question_type === "radio_button") ans = q.answers[a].text;
+      else if (q.question_type === "checkbox") ans = "[" + a.map(i => q.answers[i].text).join("; ") + "]";
+      else ans = String(a);
+      lines.push([q.question_id, q.question_type, stripMd(q.question_text), opts, ans].map(csvq).join(","));
+    }
+    return lines.join("\n");
+  }
+
+  // ---------- flows ----------
+  function go(screen) { S.screen = screen; S.menu = false; render(); scrollTop(); }
+  function scrollTop() { const sc = document.querySelector("#screen .scroll"); if (sc) sc.scrollTop = 0; }
+  let toastTimer;
+  function toast(msg, ms = 3200) { S.toast = msg; render(); clearTimeout(toastTimer); toastTimer = setTimeout(() => { S.toast = null; render(); }, ms); }
+  function dialog(d) { S.dialog = d; render(); }
+
+  function startRegister() {
+    const f = S.form;
+    const fail = m => dialog({ title: S.platform === "ios" ? "Registration failed" : "Can't register", msg: m, buttons: [{ label: "OK", cls: "strong" }] });
+    if (!f.server.trim()) return fail("Please enter the URL for the study.");
+    if (!f.uid.trim()) return fail("Please enter your User ID.");
+    if (!f.temp) return fail("Please enter the Temporary Password you were given at signup.");
+    if (f.pw.length < 6) return fail("Your new password must be at least 6 characters long.");
+    if (f.pw !== f.pw2) return fail("New Password doesn't match Confirm New Password.");
+    const proceed = () => {
+      S.loading = true; render();
+      setTimeout(() => {
+        S.loading = false; S.registered = true;
+        logIt("Registration", `POST https://${f.server.replace(/^https?:\/\//, "")}/register_user\npatient_id=${f.uid}\ndevice_os=${S.platform === "ios" ? "iOS" : "Android"}`, "The server sends back the study settings and an encryption key. Surveys download next.");
+        S.consentIdx = 0; S.learnMore = false;
+        go("consent");
+      }, 900);
+    };
+    if (S.platform === "android" && (ds().calls || ds().texts)) {
+      dialog({ title: "Permissions Requirement:", msg: `In order to register for a study, ${appName()} requires access to some of this device's telephone services. Please press "Allow" when you see a menu requesting permissions to manage Phone Calls.`, buttons: [{ label: "OK", then: () => dialog({ system: true, title: `Allow ${appName()} to make and manage phone calls?`, buttons: [{ label: "Allow", then: () => { S.grants.phone = true; proceed(); } }, { label: "Don't allow", then: () => { S.grants.phone = false; proceed(); } }] }) }] });
+    } else proceed();
+  }
+
+  function permSteps() {
+    const n = appName();
+    const d = ds();
+    if (S.platform === "ios") {
+      return [
+        { system: true, title: `Allow "${n}" to use your location?`, msg: "Location is used to collect GPS data for the research study.", buttons: [{ label: "Allow Once", g: { location: "once" } }, { label: "Allow While Using App", g: { location: "while" } }, { label: "Don't Allow", g: { location: false } }] },
+        { system: true, title: `"${n}" Would Like to Send You Notifications`, msg: "Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.", buttons: [{ label: "Don't Allow", g: { notifications: false } }, { label: "Allow", cls: "strong", g: { notifications: true } }] },
+        { when: () => S.grants.location === "while", system: true, title: `Allow "${n}" to also use your location even when you are not using the app?`, msg: "Background location lets the study measure time at home and trips.", buttons: [{ label: "Keep Only While Using", g: { locationAlways: false } }, { label: "Change to Always Allow", cls: "strong", g: { locationAlways: true } }] },
+        { when: () => S.grants.locationAlways !== true, title: "Location Permissions", msg: `If you don't see a pop up asking for permissions, please go to Settings -> ${n} -> Location and select 'Always'.`, buttons: [{ label: "OK", g: { locationAlways: false } }] }
+      ];
+    }
+    const steps = [
+      { title: "Permissions Requirement:", msg: `For this study ${n} needs permission to use Location Services. Please press allow on the following permissions request.`, buttons: [{ label: "OK" }] },
+      { system: true, title: `Allow ${n} to access this device's location?`, buttons: [{ label: "While using the app", g: { location: "while" } }, { label: "Only this time", g: { location: "once" } }, { label: "Don't allow", g: { location: false } }] },
+      { title: "Permissions Requirement:", msg: `To be fully enrolled in this study ${n} needs permission to use Location: "Allow all the time". ${n} will now open its settings page so you can enable it.`, buttons: [{ label: "OK" }] },
+      { system: true, title: "Location permission for this app", buttons: [{ label: "Allow all the time", g: { locationAlways: true } }, { label: "Allow only while using the app", g: { locationAlways: false } }, { label: "Ask every time", g: { locationAlways: false } }, { label: "Don't allow", g: { locationAlways: false, location: false } }] },
+      { system: true, title: `Allow ${n} to send you notifications?`, buttons: [{ label: "Allow", g: { notifications: true } }, { label: "Don't allow", g: { notifications: false } }] }
+    ];
+    if (d.calls) steps.push({ system: true, title: `Allow ${n} to access your phone call logs?`, buttons: [{ label: "Allow", g: { calls: true } }, { label: "Don't allow", g: { calls: false } }] });
+    if (d.texts) steps.push({ system: true, title: `Allow ${n} to send and view SMS messages?`, msg: "Only message timing and length are recorded, never content.", buttons: [{ label: "Allow", g: { texts: true } }, { label: "Don't allow", g: { texts: false } }] });
+    steps.push(
+      { title: "Permissions Requirement:", msg: `This permission prompt you are about to see is required to allow ${n} to execute in the background.`, buttons: [{ label: "OK" }] },
+      { system: true, title: "Let app always run in background?", msg: `Allowing ${n} to always run in the background may reduce battery life.`, buttons: [{ label: "Allow", g: { battery: true } }, { label: "Deny", g: { battery: false } }] }
+    );
+    return steps;
+  }
+
+  function runPerm() {
+    const p = S.perm;
+    while (p.i < p.steps.length && p.steps[p.i].when && !p.steps[p.i].when()) p.i++;
+    if (p.i >= p.steps.length) {
+      S.perm = null; S.dialog = null;
+      const missing = S.grants.notifications === false || S.grants.location === false;
+      logIt("Permissions", Object.entries(S.grants).map(([k, v]) => `${k}: ${v}`).join("\n"), "Recorded in the phone's app log so the study team can see why data is missing.");
+      seedActive();
+      go("home");
+      if (missing) dialog({ title: "Warning", msg: "Permission to access your location and send notifications is required to correctly gather the data required for this study. To participate in this study we highly recommend you go back and allow this application to use these permissions.", buttons: [{ label: "OK" }] });
+      return;
+    }
+    const st = p.steps[p.i];
+    dialog({ ...st, buttons: st.buttons.map(b => ({ ...b, then: () => { Object.assign(S.grants, b.g || {}); p.i++; runPerm(); } })) });
+  }
+
+  function seedActive() {
+    // On first download, surveys scheduled earlier today are waiting. Show one as new.
+    const first = surveys().find(s => s.survey_type === "tracking_survey");
+    S.active = {};
+    if (first) S.active[first.id] = "new";
+  }
+
+  function openSurvey(id) {
+    const s = surveys().find(x => x.id === Number(id) || String(x.id) === String(id));
+    if (!s) return;
+    S.banner = null;
+    if (!S.registered) return toast("Register first. Notifications reach the phone only after registration.");
+    if (S.screen === "signedOut") return toast("Log in to answer surveys.");
+    if (s.survey_type === "audio_survey") {
+      S.audio = { survey: s, recording: false, elapsed: 0, done: false, playing: false };
+      logIt("Survey opened", `${surveyName(s)} (audio)`, null);
+      return go("audio");
+    }
+    if (!(s.content || []).length) return toast("This survey has no questions.");
+    const prev = S.run && S.run.survey.id === s.id ? S.run : null;
+    const answers = prev ? prev.answers : {};
+    S.run = { survey: s, answers, path: [], idx: 0, submitPage: false, opened: Date.now() };
+    const firstIdx = s.content.findIndex(q => shown(q, answers));
+    S.run.idx = firstIdx < 0 ? 0 : firstIdx;
+    S.run.path = [S.run.idx];
+    if (S.active[s.id]) S.active[s.id] = "incomplete";
+    go("survey");
+  }
+
+  function nextQ() {
+    const r = S.run;
+    const qs = r.survey.content;
+    let i = r.idx + 1;
+    while (i < qs.length && !shown(qs[i], r.answers)) i++;
+    if (i >= qs.length) { r.submitPage = true; return go("survey"); }
+    r.idx = i; r.path.push(i); go("survey");
+  }
+  function backQ() {
+    const r = S.run;
+    if (r.submitPage) { r.submitPage = false; return go("survey"); }
+    if (r.path.length > 1) { r.path.pop(); r.idx = r.path[r.path.length - 1]; }
+    go("survey");
+  }
+  function gotoQ(qid) {
+    const r = S.run;
+    const qs = r.survey.content;
+    const target = qs.findIndex(q => q.question_id === qid);
+    if (target < 0) return;
+    r.submitPage = false;
+    r.path = [];
+    for (let i = 0; i <= target; i++) if (shown(qs[i], r.answers)) r.path.push(i);
+    r.idx = target;
+    go("survey");
+  }
+  function submitSurvey() {
+    const r = S.run;
+    const s = r.survey;
+    logIt(`survey_answers · ${surveyName(s)}`, answersCsv(s, r.answers), `Encrypted and uploaded with the next data upload (every ${Math.round((ds().upload_data_files_frequency_seconds || 3600) / 60)} min${ds().allow_upload_over_cellular_data ? "" : ", on Wi-Fi"}). A survey_timings file records when each question was shown and answered.`);
+    if (!(s.settings && s.settings.always_available)) delete S.active[s.id];
+    S.run = null;
+    go("home");
+    toast(ds().survey_submit_success_toast_text || (S.platform === "ios" ? "Survey Submitted" : "Thank you for completing the survey."), 4500);
+  }
+
+  let recTimer;
+  function recToggle() {
+    const a = S.audio;
+    if (a.recording) { a.recording = false; a.done = true; clearInterval(recTimer); return render(); }
+    a.recording = true; a.done = false; a.elapsed = 0; a.playing = false;
+    const t0 = Date.now();
+    clearInterval(recTimer);
+    recTimer = setInterval(() => {
+      if (S.screen !== "audio" || !S.audio || !S.audio.recording) return clearInterval(recTimer);
+      S.audio.elapsed = (Date.now() - t0) / 1000;
+      if (S.audio.elapsed >= 240) { S.audio.recording = false; S.audio.done = true; clearInterval(recTimer); }
+      render();
+    }, 150);
+    render();
+  }
+
+  function resetAll(keepContent = true) {
+    clearInterval(recTimer);
+    const study = keepContent ? S.study : SENTINEL_STUDY;
+    Object.assign(S, {
+      study, screen: S.platform === "ios" ? "welcome" : "register",
+      form: { server: "sentinel.example.edu", uid: "x7k2m9qa", temp: "", pw: "", pw2: "" },
+      consentIdx: 0, learnMore: false, perm: null, grants: {}, registered: false, active: {},
+      run: null, audio: null, dialog: null, banner: null, toast: null, menu: false, loading: false, log: []
+    });
+    render();
+  }
+
+  // ---------- events ----------
+  const actions = {
+    toRegister: () => go("register"),
+    toWelcome: () => go("welcome"),
+    register: startRegister,
+    learnMore: () => { S.learnMore = true; render(); },
+    consentNext: () => { S.consentIdx++; S.learnMore = false; go("consent"); },
+    consentBack: () => { S.consentIdx = Math.max(0, S.consentIdx - 1); S.learnMore = false; go("consent"); },
+    consentYes: () => { logIt("Consent", `consented=true\nplatform=${S.platform}`, null); go("permIntro"); },
+    consentNo: () => dialog({ title: S.platform === "ios" ? "Leave Study" : "Alert", msg: "You have indicated you do not consent to the terms of this application. If you press \"I understand\" the app will exit, and you will not be enrolled in the study. If you press \"Cancel\" you will be able to press the \"I Consent\" button.", buttons: [{ label: "Cancel", cls: "strong" }, { label: "I understand", cls: "danger", then: () => resetAll() }] }),
+    permStart: () => { S.perm = { steps: permSteps(), i: 0 }; runPerm(); },
+    openSurvey: el => openSurvey(el.dataset.id),
+    openBanner: () => openSurvey(S.banner),
+    qNext: nextQ,
+    qBack: backQ,
+    gotoQ: el => gotoQ(el.dataset.q),
+    submit: submitSurvey,
+    surveyCancel: () => { go("home"); },
+    recToggle,
+    recPlay: () => { S.audio.playing = !S.audio.playing; render(); if (S.audio.playing) setTimeout(() => { if (S.audio) { S.audio.playing = false; render(); } }, Math.min(4000, S.audio.elapsed * 1000)); },
+    recSave: () => {
+      const a = S.audio;
+      logIt(`voiceRecording · ${surveyName(a.survey)}`, `${Math.round(a.elapsed)} s, ${a.survey.settings.audio_survey_type === "raw" ? "WAV" : "MP4/AAC"} ${a.survey.settings.bit_rate || 64000} bps, ${a.survey.settings.sample_rate || 44100} Hz`, "The audio file is encrypted on the phone before upload.");
+      if (!(a.survey.settings && a.survey.settings.always_available)) delete S.active[a.survey.id];
+      S.audio = null; go("home"); toast("Recording saved.");
+    },
+    recCancel: () => {
+      if (S.audio && S.audio.done) return dialog({ title: "Abandon recording?", buttons: [{ label: "Cancel", cls: "strong" }, { label: "Abandon", cls: "danger", then: () => { S.audio = null; go("home"); } }] });
+      clearInterval(recTimer); S.audio = null; go("home");
+    },
+    callClinician: () => dialog({ title: "Confirm", msg: `Call ${CLINICIAN_PHONE}?`, buttons: [{ label: "Cancel" }, { label: "Call", cls: "strong", then: () => toast("On a real phone this opens the dialer with the study team's number.") }] }),
+    callRA: () => { S.menu = false; dialog({ title: "Confirm", msg: `Call the research assistant at ${RA_PHONE}?`, buttons: [{ label: "Cancel" }, { label: "Call", cls: "strong", then: () => toast("On a real phone this opens the dialer.") }] }); },
+    openMenu: () => { S.menu = true; render(); },
+    closeMenu: () => { S.menu = false; render(); },
+    openSheet: () => dialog({ sheet: true, buttons: [{ label: "Change Password", then: () => go("password") }, { label: "Call Research Assistant", then: actions.callRA }, { label: "Logout", then: actions.signOut }, { label: "Cancel", cancel: true }] }),
+    about: () => go("about"),
+    toHome: () => go("home"),
+    changePw: () => go("password"),
+    pwSave: () => {
+      const a = $("#cp1").value, b = $("#cp2").value, c = $("#cp3").value;
+      if (!a) return dialog({ title: "Can't change password", msg: "Sorry, your Current Password is incorrect.", buttons: [{ label: "OK" }] });
+      if (b.length < 6) return dialog({ title: "Can't change password", msg: "Your new password must be at least 6 characters long.", buttons: [{ label: "OK" }] });
+      if (b !== c) return dialog({ title: "Can't change password", msg: "New Password doesn't match Confirm New Password.", buttons: [{ label: "OK" }] });
+      go("home"); toast("Your password was successfully changed");
+    },
+    signOut: () => { S.menu = false; go("signedOut"); },
+    logIn: () => go("home"),
+    forgot: () => dialog({ title: "Forgot Password", msg: `Please contact your study's staff and provide them with your Patient ID (${S.form.uid}) so they can give you a temporary password.`, buttons: [{ label: "OK" }] }),
+    dlg: el => {
+      const d = S.dialog;
+      const b = d && d.buttons[Number(el.dataset.i)];
+      S.dialog = null;
+      if (b && b.then) b.then(); else render();
+    }
+  };
+
+  $("#screen").addEventListener("click", e => {
+    const el = e.target.closest("[data-a]");
+    if (!el || el.disabled) return;
+    const fn = actions[el.dataset.a];
+    if (fn) fn(el);
+  });
+
+  $("#screen").addEventListener("input", e => {
+    const t = e.target;
+    if (t.dataset.f) { S.form[t.dataset.f] = t.value; return; }
+    if (!S.run || !t.dataset.ans) return;
+    const q = S.run.survey.content[S.run.idx];
+    const k = t.dataset.ans;
+    if (k === "slider") {
+      S.run.answers[q.question_id] = Number(t.value);
+      const v = $("#sv"); if (v) v.textContent = t.value;
+      t.closest(".slider-wrap").classList.remove("untouched");
+      const hint = t.closest(".slider-wrap").querySelector(".slider-hint"); if (hint) hint.remove();
+    } else if (k === "text") {
+      S.run.answers[q.question_id] = q.text_field_type === "NUMERIC" && t.value !== "" ? Number(t.value) : t.value;
+    }
+  });
+  $("#screen").addEventListener("change", e => {
+    const t = e.target;
+    if (!S.run || !t.dataset.ans) return;
+    const q = S.run.survey.content[S.run.idx];
+    const i = Number(t.dataset.i);
+    if (t.dataset.ans === "radio") S.run.answers[q.question_id] = i;
+    else if (t.dataset.ans === "check") {
+      const cur = new Set(S.run.answers[q.question_id] || []);
+      t.checked ? cur.add(i) : cur.delete(i);
+      S.run.answers[q.question_id] = [...cur].sort((a, b) => a - b);
+    } else if (t.dataset.ans === "slider") return;
+    else return;
+    const sc = document.querySelector("#screen .scroll");
+    const top = sc ? sc.scrollTop : 0;
+    render();
+    const sc2 = document.querySelector("#screen .scroll"); if (sc2) sc2.scrollTop = top;
+  });
+  // A tap on an untouched slider counts as an answer even if the value doesn't change.
+  $("#screen").addEventListener("pointerup", e => {
+    const t = e.target;
+    if (t.id === "q-slider" && S.run) t.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+
+  document.querySelector(".bench").addEventListener("click", e => {
+    const el = e.target.closest("[data-ctl]");
+    if (!el || el.disabled) return;
+    const c = el.dataset.ctl;
+    if (c === "platform") {
+      if (S.platform === el.dataset.v) return;
+      S.platform = el.dataset.v; S.menu = false; S.dialog = null;
+      if (S.perm) { S.perm = null; S.screen = "permIntro"; }
+      if (S.screen === "welcome" && S.platform === "android") S.screen = "register";
+      render();
+    } else if (c === "brand") {
+      S.brand = el.dataset.v; render();
+    } else if (c === "notify") {
+      const id = Number($("#notifySurvey").value);
+      if (!(id in S.active)) S.active[id] = "new";
+      logIt("Push notification sent", `survey: ${surveyName(surveys().find(s => s.id === id))}\nvia Firebase Cloud Messaging`, null);
+      S.banner = id; render();
+      clearTimeout(window.__bn);
+      window.__bn = setTimeout(() => { if (S.banner === id) { S.banner = null; render(); } }, 9000);
+    } else if (c === "skip") {
+      S.registered = true;
+      S.grants = { location: "while", locationAlways: true, notifications: true, battery: true };
+      if (!S.form.temp) S.form.temp = "temp";
+      seedActive();
+      S.dialog = null; S.perm = null; S.loading = false;
+      go("home");
+    } else if (c === "reset") {
+      resetAll();
+    } else if (c === "loadjson") {
+      loadJson();
+    } else if (c === "example") {
+      S.study = SENTINEL_STUDY;
+      $("#jsonIn").value = JSON.stringify({ surveys: SENTINEL_STUDY.surveys.slice(0, 1) }, null, 2);
+      setMsg("Sentinel example restored.", "ok");
+      afterContentChange();
+    }
+  });
+
+  function setMsg(text, kind) { const m = $("#jsonMsg"); m.textContent = text; m.className = "msg " + (kind || ""); }
+
+  function afterContentChange() {
+    S.run = null; S.audio = null; S.banner = null; S.dialog = null;
+    if (S.registered) { seedActive(); go("home"); } else render();
+  }
+
+  function loadJson() {
+    let data;
+    try { data = JSON.parse($("#jsonIn").value); } catch (e) { return setMsg("That is not valid JSON: " + e.message, "err"); }
+    let list;
+    if (Array.isArray(data) && data.length && data[0].question_type) list = [{ id: 900, name: "Pasted survey", survey_type: "tracking_survey", content: data, settings: { always_available: true }, timings: [] }];
+    else if (Array.isArray(data)) list = data;
+    else if (data && Array.isArray(data.surveys)) list = data.surveys;
+    else if (data && Array.isArray(data.content)) list = [data];
+    else return setMsg("Expected a study export with a \"surveys\" list, a survey with \"content\", or a list of questions.", "err");
+    const usable = list.filter(s => s && !s.deleted).map((s, i) => ({
+      ...s,
+      id: s.id ?? 900 + i,
+      name: s.name || (s.survey_type === "audio_survey" ? `Audio survey ${i + 1}` : `Survey ${i + 1}`),
+      survey_type: s.survey_type || "tracking_survey",
+      settings: s.settings || {},
+      content: Array.isArray(s.content) ? s.content : []
+    }));
+    if (!usable.length) return setMsg(`Found ${list.length} survey${list.length === 1 ? "" : "s"}, but all are marked deleted.`, "err");
+    const known = new Set(["info_text_box", "slider", "radio_button", "checkbox", "free_response", "date", "time", "date_time"]);
+    const odd = usable.flatMap(s => s.survey_type === "audio_survey" ? [] : s.content.filter(q => !known.has(q.question_type)).map(q => q.question_type));
+    const study = { device_settings: data.device_settings || S.study.device_settings, surveys: usable };
+    // A survey with no schedule would never reach the main screen, so make it always available here.
+    study.surveys.forEach(s => { if (!(Array.isArray(s.timings) && s.timings.some(d => d && d.length))) s.settings.always_available = true; });
+    S.study = study;
+    setMsg(`Loaded ${usable.length} survey${usable.length === 1 ? "" : "s"}${data.device_settings ? " and the study's device settings" : ""}.${odd.length ? ` Unknown question types shown as errors: ${[...new Set(odd)].join(", ")}.` : ""}`, "ok");
+    afterContentChange();
+  }
+
+  $("#jsonIn").value = JSON.stringify({ surveys: SENTINEL_STUDY.surveys.slice(0, 1) }, null, 2);
+
+  // keep the status-bar clock current
+  setInterval(() => { const el = document.querySelector("#screen .statusbar span"); if (el) el.textContent = nowClock(); }, 20000);
+
+  render();
+})();
+</script>
+</body>
+</html>
