@@ -1,0 +1,4 @@
+env.sh
+participants.json
+server_surveys.json
+*.log

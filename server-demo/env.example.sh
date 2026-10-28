@@ -1,0 +1,11 @@
+export DOMAIN_NAME="localhost:8080"
+export FLASK_SECRET_KEY="local-demo-secret-key-not-for-production"
+export S3_BUCKET="sentinel-demo"
+export S3_ENDPOINT="http://127.0.0.1:9000"
+export S3_REGION_NAME="us-east-1"
+export AWS_ACCESS_KEY_ID="demo"; export AWS_SECRET_ACCESS_KEY="demo"
+export S3_ACCESS_CREDENTIALS_USER="demo"; export S3_ACCESS_CREDENTIALS_KEY="demo"
+export RDS_DB_NAME="beiwe"; export RDS_USERNAME="beiwe"; export RDS_PASSWORD="beiwe"; export RDS_HOSTNAME="127.0.0.1"
+export SYSADMIN_EMAILS="sysadmin@example.edu"
+export RUNNING_IN_DOCKER=1
+export DEVELOPER_TIMEZONE="America/Los_Angeles"

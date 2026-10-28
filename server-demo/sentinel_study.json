@@ -1,0 +1,505 @@
+{
+ "device_settings": {
+  "gps": true,
+  "gps_on_duration_seconds": 90,
+  "gps_off_duration_seconds": 810,
+  "accelerometer": true,
+  "accelerometer_on_duration_seconds": 10,
+  "accelerometer_off_duration_seconds": 20,
+  "gyro": true,
+  "gyro_on_duration_seconds": 10,
+  "gyro_off_duration_seconds": 20,
+  "magnetometer": false,
+  "devicemotion": false,
+  "power_state": true,
+  "proximity": true,
+  "wifi": false,
+  "bluetooth": false,
+  "calls": true,
+  "texts": true,
+  "upload_data_files_frequency_seconds": 3600,
+  "allow_upload_over_cellular_data": false,
+  "use_anonymized_hashing": true,
+  "call_clinician_button_text": "Call Study Team",
+  "survey_submit_success_toast_text": "Thank you, your answers are saved. The study team does not see them right away. If you need help now, press \"Call Study Team\".",
+  "about_page_text": "Sentinel uses this app to understand daily routines, mood and time spent at home.\n\nThe app asks short check-in questions a few times a day and collects phone sensor data in the background, such as location and movement. It does not record the content of calls or messages, and the names and numbers of the people you contact are replaced with codes.\n\nThe app knows you only by your study ID. The study team does not watch your answers in real time, so the app cannot help in an emergency.\n\n(Example text. Replace it with your IRB-approved wording.)",
+  "consent_form_text": "I have read and understood the information about the Sentinel study, and all of my questions have been answered by the study team.",
+  "consent_sections": {
+   "welcome": {
+    "text": "Sentinel studies how daily routines, mood and time at home change over several weeks.",
+    "more": "You will use this app for the length of the study. Your study coordinator gave you a user ID and a temporary password."
+   },
+   "data_gathering": {
+    "text": "The app collects location, movement and phone-use information in the background.",
+    "more": "Location is sampled for 90 seconds about every 15 minutes. Movement sensors run in short bursts. Call and text logs record timing and length, never content."
+   },
+   "privacy": {
+    "text": "Your data is encrypted on the phone and on the study server and is linked only to your study ID.",
+    "more": "Phone numbers and Wi-Fi names are replaced with random codes before they leave the phone."
+   },
+   "study_survey": {
+    "text": "You will get short check-ins four times a day, plus a morning and an evening survey.",
+    "more": "Each check-in takes about one minute. You can skip any question."
+   },
+   "time_commitment": {
+    "text": "About 6 minutes a day, for the length of the study.",
+    "more": "Keep the app installed and your phone charged. You do not need to open the app except to answer surveys."
+   },
+   "withdrawing": {
+    "text": "You can stop at any time by telling the study team.",
+    "more": "Data collected before you withdraw may still be used, as described in your consent document."
+   },
+   "study_tasks": {
+    "text": "",
+    "more": ""
+   }
+  }
+ },
+ "surveys": [
+  {
+   "name": "Momentary check-in",
+   "survey_type": "tracking_survey",
+   "content": [
+    {
+     "question_id": "ema-intro",
+     "question_type": "info_text_box",
+     "question_text": "## Quick check-in\nThink about **the last hour**. This takes about a minute."
+    },
+    {
+     "question_id": "ema-mood",
+     "question_type": "slider",
+     "question_text": "How is your mood right now?\n\n0 = very bad, 10 = very good",
+     "min": "0",
+     "max": "10"
+    },
+    {
+     "question_id": "ema-stress",
+     "question_type": "slider",
+     "question_text": "How stressed do you feel right now?\n\n0 = not at all, 10 = extremely",
+     "min": "0",
+     "max": "10"
+    },
+    {
+     "question_id": "ema-where",
+     "question_type": "radio_button",
+     "question_text": "Where are you right now?",
+     "answers": [
+      {
+       "text": "At home"
+      },
+      {
+       "text": "Someone else's home"
+      },
+      {
+       "text": "Work or school"
+      },
+      {
+       "text": "Outdoors"
+      },
+      {
+       "text": "Another indoor place"
+      }
+     ]
+    },
+    {
+     "question_id": "ema-away",
+     "question_type": "radio_button",
+     "question_text": "How long ago did you leave home?",
+     "answers": [
+      {
+       "text": "Less than 1 hour"
+      },
+      {
+       "text": "1 to 3 hours"
+      },
+      {
+       "text": "3 to 6 hours"
+      },
+      {
+       "text": "More than 6 hours"
+      }
+     ],
+     "display_if": {
+      ">": [
+       "ema-where",
+       0
+      ]
+     }
+    },
+    {
+     "question_id": "ema-with",
+     "question_type": "radio_button",
+     "question_text": "Who are you with?",
+     "answers": [
+      {
+       "text": "Alone"
+      },
+      {
+       "text": "Partner or family"
+      },
+      {
+       "text": "Friends"
+      },
+      {
+       "text": "Coworkers or classmates"
+      },
+      {
+       "text": "Other people"
+      }
+     ]
+    },
+    {
+     "question_id": "ema-did",
+     "question_type": "checkbox",
+     "question_text": "Since the last check-in, did you\u2026 (select all that apply)",
+     "answers": [
+      {
+       "text": "Exercise or walk"
+      },
+      {
+       "text": "Eat a meal"
+      },
+      {
+       "text": "Nap"
+      },
+      {
+       "text": "Drink alcohol"
+      },
+      {
+       "text": "None of these"
+      }
+     ]
+    },
+    {
+     "question_id": "ema-note",
+     "question_type": "free_response",
+     "text_field_type": "SINGLE_LINE_TEXT",
+     "question_text": "Anything else worth noting? (optional)"
+    }
+   ],
+   "settings": {
+    "always_available": false,
+    "randomize": false
+   },
+   "timings": [
+    [
+     32400,
+     46800,
+     61200,
+     75600
+    ],
+    [
+     32400,
+     46800,
+     61200,
+     75600
+    ],
+    [
+     32400,
+     46800,
+     61200,
+     75600
+    ],
+    [
+     32400,
+     46800,
+     61200,
+     75600
+    ],
+    [
+     32400,
+     46800,
+     61200,
+     75600
+    ],
+    [
+     32400,
+     46800,
+     61200,
+     75600
+    ],
+    [
+     32400,
+     46800,
+     61200,
+     75600
+    ]
+   ],
+   "absolute_timings": [],
+   "relative_timings": []
+  },
+  {
+   "name": "Morning sleep diary",
+   "survey_type": "tracking_survey",
+   "content": [
+    {
+     "question_id": "sl-bed",
+     "question_type": "time",
+     "question_text": "What time did you go to bed last night?"
+    },
+    {
+     "question_id": "sl-wake",
+     "question_type": "time",
+     "question_text": "What time did you wake up this morning?"
+    },
+    {
+     "question_id": "sl-wakings",
+     "question_type": "free_response",
+     "text_field_type": "NUMERIC",
+     "question_text": "How many times did you wake up during the night?"
+    },
+    {
+     "question_id": "sl-quality",
+     "question_type": "slider",
+     "question_text": "How well did you sleep?\n\n1 = very poorly, 5 = very well",
+     "min": "1",
+     "max": "5"
+    }
+   ],
+   "settings": {
+    "always_available": false
+   },
+   "timings": [
+    [
+     28800
+    ],
+    [
+     28800
+    ],
+    [
+     28800
+    ],
+    [
+     28800
+    ],
+    [
+     28800
+    ],
+    [
+     28800
+    ],
+    [
+     28800
+    ]
+   ],
+   "absolute_timings": [],
+   "relative_timings": []
+  },
+  {
+   "name": "Evening home-stay log",
+   "survey_type": "tracking_survey",
+   "content": [
+    {
+     "question_id": "hs-left",
+     "question_type": "radio_button",
+     "question_text": "Did you leave home today?",
+     "answers": [
+      {
+       "text": "No"
+      },
+      {
+       "text": "Yes"
+      }
+     ]
+    },
+    {
+     "question_id": "hs-hours",
+     "question_type": "free_response",
+     "text_field_type": "NUMERIC",
+     "question_text": "About how many hours were you away from home in total?",
+     "display_if": {
+      "==": [
+       "hs-left",
+       1
+      ]
+     }
+    },
+    {
+     "question_id": "hs-why",
+     "question_type": "checkbox",
+     "question_text": "What did you leave home for?",
+     "answers": [
+      {
+       "text": "Work or school"
+      },
+      {
+       "text": "Errands or shopping"
+      },
+      {
+       "text": "Seeing people"
+      },
+      {
+       "text": "Exercise"
+      },
+      {
+       "text": "Medical appointment"
+      },
+      {
+       "text": "Other"
+      }
+     ],
+     "display_if": {
+      "==": [
+       "hs-left",
+       1
+      ]
+     }
+    },
+    {
+     "question_id": "hs-stuck",
+     "question_type": "radio_button",
+     "question_text": "What kept you at home?",
+     "answers": [
+      {
+       "text": "I chose to stay in"
+      },
+      {
+       "text": "Not feeling well"
+      },
+      {
+       "text": "Weather"
+      },
+      {
+       "text": "No transport"
+      },
+      {
+       "text": "Other"
+      }
+     ],
+     "display_if": {
+      "==": [
+       "hs-left",
+       0
+      ]
+     }
+    },
+    {
+     "question_id": "hs-day",
+     "question_type": "slider",
+     "question_text": "Overall, how was today?\n\n0 = very bad, 10 = very good",
+     "min": "0",
+     "max": "10"
+    },
+    {
+     "question_id": "hs-more",
+     "question_type": "free_response",
+     "text_field_type": "MULTI_LINE_TEXT",
+     "question_text": "Anything unusual about today? (optional)"
+    }
+   ],
+   "settings": {
+    "always_available": false
+   },
+   "timings": [
+    [
+     73800
+    ],
+    [
+     73800
+    ],
+    [
+     73800
+    ],
+    [
+     73800
+    ],
+    [
+     73800
+    ],
+    [
+     73800
+    ],
+    [
+     73800
+    ]
+   ],
+   "absolute_timings": [],
+   "relative_timings": []
+  },
+  {
+   "name": "Voice diary",
+   "survey_type": "audio_survey",
+   "content": [
+    {
+     "prompt": "Tell us about your week. When you are ready, press Record and talk for about a minute about how things have been going. Press Stop when you are finished."
+    }
+   ],
+   "settings": {
+    "always_available": true,
+    "audio_survey_type": "compressed",
+    "bit_rate": 64000,
+    "sample_rate": 44100
+   },
+   "timings": [
+    [
+     64800
+    ],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "absolute_timings": [],
+   "relative_timings": []
+  },
+  {
+   "name": "Two-week follow-up",
+   "survey_type": "tracking_survey",
+   "settings": {
+    "always_available": false
+   },
+   "timings": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "absolute_timings": [],
+   "relative_timings": [
+    [
+     "Baseline visit",
+     14,
+     36000
+    ]
+   ],
+   "content": [
+    {
+     "question_id": "fu-overall",
+     "question_type": "radio_button",
+     "question_text": "Compared with two weeks ago, how are you doing overall?",
+     "answers": [
+      {
+       "text": "Much worse"
+      },
+      {
+       "text": "A little worse"
+      },
+      {
+       "text": "About the same"
+      },
+      {
+       "text": "A little better"
+      },
+      {
+       "text": "Much better"
+      }
+     ]
+    },
+    {
+     "question_id": "fu-routine",
+     "question_type": "free_response",
+     "text_field_type": "MULTI_LINE_TEXT",
+     "question_text": "Has anything changed in your daily routine?"
+    }
+   ]
+  }
+ ],
+ "interventions": [
+  "Baseline visit"
+ ]
+}
