@@ -1,3 +1,11 @@
+## Sentinel
+
+This fork adds material for running Beiwe in the Sentinel project:
+
+* [`prototype/`](prototype/): clickable web mock of the participant app with the Sentinel EMAs
+* [`server-demo/`](server-demo/): scripts that run the real Beiwe backend locally with the Sentinel study and simulated phones
+* [`deploy/`](deploy/): step-by-step guide to deploying the Sentinel server on AWS
+
 ## Project name
 Beiwe
 
